@@ -123,8 +123,33 @@ namespace Bankcom
                     }
                     Console.Write("Branch Code: ");
                     string? BranchCode = Console.ReadLine();
-                    account.Branch = account.Branch ?? new Branch();
-                    account.Branch.BranchCode = BranchCode ?? string.Empty;
+
+
+                    Console.Write("Branch Id: ");
+
+                    string? branchIdInput = Console.ReadLine();
+                    if (!int.TryParse(branchIdInput, out int branchId))
+                    {
+                        Console.WriteLine("Invalid Branch Id. Aborting.");
+                        Pause();
+                        return;
+                    }
+                    var branch = dbContext.Branches.FirstOrDefault(b => b.BranchId == branchId);
+                    if (branch == null)
+                    {
+                        Console.WriteLine("Branch not found. Aborting.");
+                        Pause();
+                        return;
+                    }
+                    account.BranchId = branchId;
+
+
+
+
+
+
+
+
                     int customerId;
                     while (true)
                     {
@@ -166,6 +191,9 @@ namespace Bankcom
 
 
                     };
+                    dbContext.Accounts.Add(account);
+                    dbContext.CustomerAccounts.Add(customerAccount);
+                    dbContext.SaveChanges();
 
 
                     Console.WriteLine("press any key to return to the menu...");
@@ -184,19 +212,15 @@ namespace Bankcom
                     Console.WriteLine("2) Closed");
                     Console.Write("Choice: ");
                     string? statusChoice = Console.ReadLine();
-                    switch (statusChoice)
+                    var ca = dbContext.CustomerAccounts
+                        .FirstOrDefault(x => x.AccountNumber == int.Parse(accountNumber)
+                                          && x.CustomerId == int.Parse(customerId));
+                    if (ca != null)
                     {
-                        case "1":
-                            Console.WriteLine($"Status Updated to Active");
-                            break;
-                        case "2":
-                            Console.WriteLine($"Status Updated to Closed");
-                            break;
-                        default:
-                            Console.WriteLine("Invalid status choice.");
-                            break;
+                        ca.AccountStatus = statusChoice == "1" ? AccountStatus.Active : AccountStatus.Closed;
+                        dbContext.SaveChanges();
                     }
-                    dbContext.SaveChanges();
+
                     Console.WriteLine("press any key to return to the menu...");
                     Console.ReadKey();
 
